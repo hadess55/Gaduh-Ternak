@@ -10,7 +10,7 @@ class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        foreach (['admin','farmer','mediator','legal','dinas'] as $r) {
+        foreach (['admin','farmer', 'perangkat_desa'] as $r) {
             Role::findOrCreate($r);
         }
 
@@ -19,5 +19,11 @@ class RoleSeeder extends Seeder
             ['name' => 'Administrator','password'=>bcrypt('admin123')]
         );
         $admin->assignRole('admin');
+
+        $user = User::firstOrCreate(
+        ['email'=>'desa@gmail.coom'],
+        ['name'=>'Perangkat Desa','password'=>bcrypt('desa123')]
+        );
+        $user->assignRole('perangkat_desa');
     }
 }
