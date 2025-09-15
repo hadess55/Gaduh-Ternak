@@ -35,6 +35,10 @@ class AdminPanelProvider extends PanelProvider
             PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
             fn (): string => view('filament.auth.back-to-home')->render(),
              )
+             ->renderHook(
+                PanelsRenderHook::HEAD_START,
+                fn () => view('filament.favicon')->render(),
+            )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
