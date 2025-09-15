@@ -19,8 +19,9 @@
     </div>
 
     <div class="rounded-2xl border bg-white p-6 shadow-sm">
-      <div class="aspect-[4/3] w-full rounded-xl bg-gradient-to-br from-gray-100 to-gray-200"></div>
-      <p class="mt-3 text-center text-sm text-gray-500">Ilustrasi sistem (ganti dengan gambar kamu)</p>
+      <div class="aspect-[4/3] w-full rounded-xl bg-gradient-to-br from-gray-100 to-gray-200">
+        <img src="{{ asset('image/Gambar.png') }}" alt="Gambar">
+      </div>
     </div>
   </section>
 

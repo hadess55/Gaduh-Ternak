@@ -33,7 +33,7 @@
 
         <a href="{{ $adminUrl }}"
            class="inline-flex items-center rounded-lg border border-gray-900 px-3 py-1.5 text-sm font-semibold text-gray-900 hover:bg-gray-900 hover:text-white">
-          Admin
+          Login
         </a>
       </div>
 
@@ -45,7 +45,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
-      </button>
+      </button> 
     </div>
 
     {{-- Mobile menu --}}
@@ -65,7 +65,7 @@
 
         <a href="{{ $adminUrl }}"
            class="rounded-md border border-gray-900 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-900 hover:text-white">
-          Admin
+          Login
         </a>
       </div>
     </div>

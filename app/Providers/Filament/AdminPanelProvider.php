@@ -45,10 +45,9 @@ class AdminPanelProvider extends PanelProvider
                 // Widgets\AccountWidget::class,
                 // Widgets\FilamentInfoWidget::class,
                 // \App\Filament\Widgets\QuickActions::class,
-                // \App\Filament\Widgets\KpiGaduhTernak::class,
-                // \App\Filament\Widgets\StatsOverview::class,
-                // \App\Filament\Widgets\FarmersTrendChart::class,
-                // \App\Filament\Widgets\RecentPendingFarmers::class,
+                \App\Filament\Widgets\StatsOverview::class,
+                \App\Filament\Widgets\FarmersTrendChart::class,
+                \App\Filament\Widgets\RecentPendingFarmers::class,
                 
             ])
             ->middleware([
