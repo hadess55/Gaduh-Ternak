@@ -2,6 +2,11 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\DisputeResource\Pages;
+use App\Filament\Resources\DisputeResource\RelationManagers\ActionsRelationManager;
+use App\Filament\Resources\DisputeResource\RelationManagers\EvidencesRelationManager;
+use App\Filament\Resources\DisputeResource\RelationManagers\HearingsRelationManager;
+use App\Filament\Resources\DisputeResource\RelationManagers\SusResponsesRelationManager;
 use App\Models\Dispute;
 use Filament\Forms;
 use Filament\Forms\Components\{Section, Select, TextInput, DateTimePicker, Textarea, Radio};
@@ -10,6 +15,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\{Filter, SelectFilter};
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class DisputeResource extends Resource
 {
@@ -19,21 +25,30 @@ class DisputeResource extends Resource
     protected static ?string $modelLabel = 'Sengketa';
     protected static ?string $pluralModelLabel = 'Sengketa';
 
+    protected static bool $shouldRegisterNavigation = false;
+
+// Kunci semua kemampuan → siapa pun akan 404
+public static function canViewAny(): bool     { return false; }
+public static function canView(Model $r): bool { return false; }
+public static function canCreate(): bool       { return false; }
+public static function canEdit(Model $r): bool { return false; }
+public static function canDelete(Model $r): bool{ return false; }
+
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form->schema([
             Section::make('Data Kasus')->schema([
                 Select::make('reporter_id')
                     ->label('Pelapor')
-                    ->placeholder('Pilih pelapor')
                     ->relationship('reporter', 'name')
+                    ->placeholder('Pilih pelapor')
                     ->searchable()
                     ->required(),
 
                 Select::make('defendant_id')
                     ->label('Terlapor')
-                    ->placeholder('Pilih terlapor')
                     ->relationship('defendant', 'name')
+                    ->placeholder('Pilih terlapor')
                     ->searchable(),
 
                 TextInput::make('location')
@@ -62,8 +77,8 @@ class DisputeResource extends Resource
 
                 Select::make('legal_basis_id')
                     ->label('Dasar Hukum')
-                    ->placeholder('Pilih rujukan pasal')
                     ->relationship('legalBasis', 'title')
+                    ->placeholder('Pilih rujukan pasal')
                     ->searchable(),
 
                 TextInput::make('damage_estimate')
@@ -81,21 +96,37 @@ class DisputeResource extends Resource
                 TextColumn::make('id')->label('#')->sortable(),
                 TextColumn::make('reporter.name')->label('Pelapor')->searchable(),
                 TextColumn::make('defendant.name')->label('Terlapor')->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('legal_route')
                     ->label('Jalur Hukum')
                     ->badge()
-                    ->formatStateUsing(fn ($s) => [
-                        'civil' => 'Perdata', 'criminal' => 'Pidana', 'hybrid' => 'Campuran',
-                    ][$s] ?? $s),
+                    ->formatStateUsing(fn (string $state) => [
+                        'civil' => 'Perdata',
+                        'criminal' => 'Pidana',
+                        'hybrid' => 'Campuran',
+                    ][$state] ?? $state),
+
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn ($s) => [
+                    ->formatStateUsing(fn (string $state) => [
                         'new'=>'Baru','triaged'=>'Triage','mediation'=>'Mediasi',
                         'settled'=>'Selesai','escalated'=>'Eskalasi','closed'=>'Tutup',
-                    ][$s] ?? $s),
+                    ][$state] ?? $state)
+                    ->color(fn (string $state) => match ($state) {
+                        'new'       => 'info',
+                        'triaged'   => 'warning',
+                        'mediation' => 'warning',
+                        'settled'   => 'success',
+                        'escalated' => 'danger',
+                        'closed'    => 'gray',
+                        default     => 'gray',
+                    }),
+
+
                 TextColumn::make('occurred_at')->label('Waktu Kejadian')->dateTime('d/m/Y H:i'),
-                TextColumn::make('damage_estimate')->label('Kerugian')->money('IDR', locale: 'id_ID')->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('damage_estimate')->label('Kerugian')->money('IDR', locale: 'id_ID')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('legal_route')->label('Jalur Hukum')->options([
@@ -109,33 +140,35 @@ class DisputeResource extends Resource
                     ->form([
                         Forms\Components\DatePicker::make('from')->label('Dari tanggal'),
                         Forms\Components\DatePicker::make('until')->label('Sampai tanggal'),
-                    ])->query(function (Builder $query, array $data) {
+                    ])
+                    ->query(function (Builder $query, array $data): void {
                         $query
-                            ->when($data['from'] ?? null, fn ($q, $v) => $q->whereDate('occurred_at', '>=', $v))
-                            ->when($data['until'] ?? null, fn ($q, $v) => $q->whereDate('occurred_at', '<=', $v));
+                            ->when($data['from'] ?? null, fn (Builder $q, $v) => $q->whereDate('occurred_at', '>=', $v))
+                            ->when($data['until'] ?? null, fn (Builder $q, $v) => $q->whereDate('occurred_at', '<=', $v));
                     }),
             ])
             ->actions([
                 Tables\Actions\Action::make('triage')->label('Triage')
+                    ->visible(fn ($record) => $record->status === 'new')
                     ->requiresConfirmation()
-                    ->visible(fn($r)=>$r->status==='new')
-                    ->action(fn(Dispute $r)=>$r->update(['status'=>'triaged'])),
+                    ->action(fn (Dispute $record) => $record->update(['status'=>'triaged'])),
 
                 Tables\Actions\Action::make('mediate')->label('Ajukan Mediasi')
-                    ->visible(fn($r)=>$r->status==='triaged')
-                    ->action(fn(Dispute $r)=>$r->update(['status'=>'mediation'])),
+                    ->visible(fn ($record) => $record->status === 'triaged')
+                    ->action(fn (Dispute $record) => $record->update(['status'=>'mediation'])),
 
                 Tables\Actions\Action::make('settle')->label('Tutup Damai')->color('success')
-                    ->visible(fn($r)=>in_array($r->status,['mediation','triaged']))
-                    ->action(fn(Dispute $r)=>$r->update(['status'=>'settled'])),
+                    ->visible(fn ($record) => in_array($record->status, ['mediation','triaged'], true))
+                    ->action(fn (Dispute $record) => $record->update(['status'=>'settled','closed_at'=>now()])),
 
                 Tables\Actions\Action::make('escalate')->label('Eskalasi Pidana')->color('danger')
-                    ->visible(fn($r)=>$r->status!=='escalated')
-                    ->action(fn(Dispute $r)=>$r->update(['status'=>'escalated'])),
+                    ->visible(fn ($record) => $record->status !== 'escalated')
+                    ->requiresConfirmation()
+                    ->action(fn (Dispute $record) => $record->update(['status'=>'escalated'])),
 
                 Tables\Actions\Action::make('surat')->label('Cetak Surat (PDF)')
                     ->icon('heroicon-o-document-text')
-                    ->url(fn(Dispute $r)=>route('disputes.surat',$r), true),
+                    ->url(fn (Dispute $record) => route('disputes.surat', $record), true),
 
                 Tables\Actions\EditAction::make()->label('Ubah'),
                 Tables\Actions\DeleteAction::make()->label('Hapus'),
@@ -148,17 +181,19 @@ class DisputeResource extends Resource
     public static function getRelations(): array
     {
         return [
-            DisputeResource\RelationManagers\EvidencesRelationManager::class,
-            DisputeResource\RelationManagers\ActionsRelationManager::class,
+            EvidencesRelationManager::class,
+            ActionsRelationManager::class,
+            HearingsRelationManager::class,
+            SusResponsesRelationManager::class,
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index'  => DisputeResource\Pages\ListDisputes::route('/'),
-            'create' => DisputeResource\Pages\CreateDispute::route('/create'),
-            'edit'   => DisputeResource\Pages\EditDispute::route('/{record}/edit'),
+            'index'  => Pages\ListDisputes::route('/'),
+            'create' => Pages\CreateDispute::route('/create'),
+            'edit'   => Pages\EditDispute::route('/{record}/edit'),
         ];
     }
 }

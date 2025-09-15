@@ -10,8 +10,10 @@ class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        foreach (['admin','farmer', 'perangkat_desa'] as $r) {
-            Role::findOrCreate($r);
+        $guard = config('auth.defaults.guard', 'web');
+
+        foreach (['admin', 'perangkat desa', 'peternak'] as $r) {
+            Role::findOrCreate($r, $guard);
         }
 
         $admin = User::firstOrCreate(
@@ -21,9 +23,9 @@ class RoleSeeder extends Seeder
         $admin->assignRole('admin');
 
         $user = User::firstOrCreate(
-        ['email'=>'desa@gmail.coom'],
+        ['email'=>'desa@gmail.com'],
         ['name'=>'Perangkat Desa','password'=>bcrypt('desa123')]
         );
-        $user->assignRole('perangkat_desa');
+        $user->assignRole('perangkat desa');
     }
 }

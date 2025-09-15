@@ -1,3 +1,48 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Latar auth gelap dengan gradien halus */
+.fi-auth {
+    @apply min-h-dvh bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950;
+}
+
+/* Kartu login bergaya glass + ring yang jelas */
+.fi-auth-card {
+    @apply rounded-2xl bg-zinc-900/90 backdrop-blur
+         ring-1 ring-zinc-700/50 shadow-2xl;
+}
+
+/* Heading & subheading */
+.fi-auth-card h2,
+.fi-auth-card h3 {
+    @apply text-zinc-100;
+}
+
+/* Input & fokus ring biar kontras */
+.fi-input,
+.fi-select,
+.fi-textarea {
+    @apply bg-zinc-900 border-zinc-700 text-zinc-100;
+}
+.fi-input:focus,
+.fi-select:focus,
+.fi-textarea:focus {
+    @apply ring-2 ring-amber-500 border-amber-500;
+}
+
+/* Checkbox label */
+.fi-forms-checkbox-component-label {
+    @apply text-zinc-300;
+}
+
+/* Tombol utama ambil warna primary (amber) – sudah diatur di provider,
+   tapi kita sedikit adjust agar menyatu dengan tema gelap */
+.fi-btn.fi-btn-color-primary {
+    @apply bg-amber-500 hover:bg-amber-600 text-zinc-950 font-semibold;
+}
+
+/* Tombol sekunder (Beranda) */
+.fi-btn.fi-btn-color-gray {
+    @apply bg-zinc-800 text-zinc-200 hover:bg-zinc-700 border border-zinc-600;
+}

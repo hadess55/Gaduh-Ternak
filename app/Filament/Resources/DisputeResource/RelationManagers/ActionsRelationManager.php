@@ -5,12 +5,13 @@ namespace App\Filament\Resources\DisputeResource\RelationManagers;
 use Filament\Forms;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
-use Illuminate\Support\Facades\Auth; // <-- WAJIB
+use Illuminate\Support\Facades\Auth;
 
 class ActionsRelationManager extends RelationManager
 {
     protected static string $relationship = 'actions';
     protected static ?string $title = 'Aksi';
+    protected static ?string $recordTitleAttribute = 'type';
 
     public function form(Forms\Form $form): Forms\Form
     {
@@ -33,9 +34,8 @@ class ActionsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()->label('Tambah Aksi')
-                    // ⛔ HAPUS named argument "callback:" lalu pakai closure biasa
                     ->mutateFormDataUsing(function (array $data): array {
-                        $data['actor_id'] = Auth::id();     // ⬅️ ganti auth()->id() -> Auth::id()
+                        $data['actor_id'] = Auth::id();
                         return $data;
                     }),
             ])

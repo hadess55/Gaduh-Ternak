@@ -19,5 +19,9 @@ class Dispute extends Model
     public function evidences(){ return $this->hasMany(Evidence::class); }
     public function actions(){ return $this->hasMany(Action::class); }
     public function settlement(){ return $this->hasOne(Settlement::class); }
+    public function hearings(){ return $this->hasMany(Hearing::class); }
+    public function susResponses(){ return $this->hasMany(SusResponse::class); }
+
+
 }
 

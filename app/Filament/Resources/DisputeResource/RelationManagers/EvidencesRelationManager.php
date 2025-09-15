@@ -5,12 +5,13 @@ namespace App\Filament\Resources\DisputeResource\RelationManagers;
 use Filament\Forms;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
-use Illuminate\Support\Facades\Auth; // <-- WAJIB
+use Illuminate\Support\Facades\Auth;
 
 class EvidencesRelationManager extends RelationManager
 {
     protected static string $relationship = 'evidences';
     protected static ?string $title = 'Bukti';
+    protected static ?string $recordTitleAttribute = 'type';
 
     public function form(Forms\Form $form): Forms\Form
     {
@@ -30,13 +31,16 @@ class EvidencesRelationManager extends RelationManager
             ->columns([
                 Tables\Columns\TextColumn::make('type')->label('Jenis')->badge(),
                 Tables\Columns\TextColumn::make('path')->label('Lokasi Berkas')->limit(30),
-                Tables\Columns\TextColumn::make('sha256')->label('Hash')->limit(16)->tooltip(fn($r)=>$r->sha256),
+                Tables\Columns\TextColumn::make('sha256')
+                    ->label('Hash')
+                    ->limit(16)
+                    ->tooltip(fn ($record) => $record->sha256),
                 Tables\Columns\TextColumn::make('uploaded_at')->label('Diunggah')->since(),
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()->label('Tambah Bukti')
                     ->mutateFormDataUsing(function (array $data): array {
-                        $data['uploaded_by'] = Auth::id(); // ⬅️ ganti auth()->id() -> Auth::id()
+                        $data['uploaded_by'] = Auth::id();
                         $data['uploaded_at'] = now();
                         return $data;
                     }),
